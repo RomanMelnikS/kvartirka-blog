@@ -12,7 +12,7 @@ router_v1.register(
     basename='publications'
 )
 router_v1.register(
-    r'publications/(?P<publication_id>\d+)/comments/',
+    r'publications/(?P<publication_id>\d+)/comments',
     CommentsViewSet,
     basename='comments'
 )

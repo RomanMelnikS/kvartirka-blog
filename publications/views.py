@@ -1,13 +1,12 @@
-from rest_framework import viewsets
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Publication
-from .serializers import PublicationSerializer, CommentSerializer
+from .models import Comment, Publication
+from .serializers import (CommentSerializer, PublicationSerializer,
+                          ReplaysCreateSerializer)
 
 
 class PublicationsViewSet(viewsets.ModelViewSet):
@@ -38,3 +37,49 @@ class CommentsViewSet(viewsets.ModelViewSet):
             'publication': publication,
         }
         serializer.save(**data)
+
+    @action(
+        detail=True,
+        methods=['get', 'post'],
+        name='replays',
+        url_name='replays',
+        url_path='replays'
+    )
+    def replays(self, request, publication_id, pk):
+        user = self.request.user
+        text = self.request.data.get('text')
+        publication = get_object_or_404(
+            Publication,
+            id=publication_id
+        )
+        comment = get_object_or_404(
+            Comment,
+            id=pk
+        )
+        serializer = CommentSerializer(comment)
+        if request.method == 'POST':
+            serializer = ReplaysCreateSerializer(
+                data={
+                    'publication': publication.id,
+                    'author': user.id,
+                    'replays': comment.id,
+                    'text': text
+                },
+                context={
+                    'request': request
+                }
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    serializer.data,
+                    status=status.HTTP_201_CREATED
+                )
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )

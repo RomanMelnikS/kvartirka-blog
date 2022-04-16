@@ -31,6 +31,22 @@ class CommentSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
+class ReplaysCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Comment
+        fields = (
+            'author',
+            'text',
+            'replays',
+            'publication'
+        )
+
+    def to_representation(self, instance):
+        serializer = CommentSerializer(instance)
+        return serializer.data
+
+
 class PublicationSerializer(serializers.ModelSerializer):
     author = serializers.CharField(
         source='author.username',
