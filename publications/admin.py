@@ -12,14 +12,26 @@ class PublicationAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'text',
-        'pub_date',
+        'created',
         'author'
     )
     search_fields = (
         'text',
     )
     list_filter = (
-        'pub_date',
+        'created',
     )
     inlines = [CommentInLine]
     model = Publication
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        'pk',
+        'publication',
+        'text',
+        'created',
+        'author'
+    )
+    model = Comment

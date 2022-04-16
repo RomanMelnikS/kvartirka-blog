@@ -1,30 +1,59 @@
 from rest_framework import serializers
 
-from .models import Publication, Comment, User
-
-
-class AuthorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = (
-            'username',
-        )
+from .models import Publication, Comment
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = AuthorSerializer()
+    author = serializers.CharField(
+        source='author.username',
+        read_only=True
+    )
+    replays = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
-        exclude = (
-            'publication',
+        fields = (
+            'id',
+            'author',
+            'text',
+            'created',
+            'replays'
         )
+
+    def get_replays(self, obj):
+        queryset = Comment.objects.filter(
+            replays_id=obj.id
+        )
+        serializer = CommentSerializer(
+            queryset,
+            many=True
+        )
+        return serializer.data
 
 
 class PublicationSerializer(serializers.ModelSerializer):
-    author = AuthorSerializer()
-    comments = CommentSerializer(many=True)
+    author = serializers.CharField(
+        source='author.username',
+        read_only=True
+    )
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Publication
-        fields = '__all__'
+        fields = (
+            'author',
+            'text',
+            'created',
+            'comments'
+        )
+
+    def get_comments(self, obj):
+        queryset = Comment.objects.filter(
+            publication_id=obj.id,
+            replays_id=None
+        )
+        serializer = CommentSerializer(
+            queryset,
+            many=True
+        )
+        return serializer.data

@@ -14,13 +14,13 @@ class Publication(models.Model):
     text = models.TextField(
         verbose_name='Публикация'
     )
-    pub_date = models.DateTimeField(
-        verbose_name='Дата и время',
+    created = models.DateTimeField(
+        verbose_name='Дата и время добавления',
         auto_now_add=True
     )
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ['-created']
         verbose_name = 'Публикация'
         verbose_name_plural = 'Публикации'
 
@@ -44,14 +44,22 @@ class Comment(models.Model):
     text = models.TextField(
         verbose_name='Текст комментария'
     )
-
+    replays = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        default=None,
+        related_name='replays_comment',
+        verbose_name='Родительский комментарий',
+        blank=True,
+        null=True
+    )
     created = models.DateTimeField(
-        verbose_name='Дата и время',
+        verbose_name='Дата и время добаления',
         auto_now_add=True
     )
 
     class Meta:
-        ordering = ['-created']
+        ordering = ['created']
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
