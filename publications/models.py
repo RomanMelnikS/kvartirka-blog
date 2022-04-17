@@ -44,12 +44,24 @@ class Comment(models.Model):
     text = models.TextField(
         verbose_name='Текст комментария'
     )
+    left = models.IntegerField(
+        blank=True,
+        null=True
+    )
+    right = models.IntegerField(
+        blank=True,
+        null=True
+    )
     replays = models.ForeignKey(
         'self',
         on_delete=models.CASCADE,
         default=None,
         related_name='replays_comment',
         verbose_name='Родительский комментарий',
+        blank=True,
+        null=True
+    )
+    level = models.IntegerField(
         blank=True,
         null=True
     )
@@ -65,3 +77,27 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:15]
+
+    def save(self, *args, **kwargs):
+        super(Comment, self).save(*args, **kwargs)
+        self.set_mptt()
+
+    def set_mptt(self, left=1, replays=None, level=1):
+        for obj in type(self).objects.filter(replays=replays):
+            comment, count = obj, 0
+            while comment.replays_comment.exists():
+                for replay in comment.replays_comment.all():
+                    count += 1
+                    comment = replay
+            data = {
+                'level': level,
+                'left': left,
+                'right': left + (count * 2) + 1
+            }
+            type(self).objects.filter(id=obj.id).update(**data)
+            left = data['right'] + 1
+            self.set_mptt(
+                left=data['left'] + 1,
+                replays=obj.id,
+                level=data['level'] + 1
+            )

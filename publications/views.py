@@ -1,7 +1,7 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from .models import Comment, Publication
@@ -12,6 +12,8 @@ from .serializers import (CommentSerializer, PublicationSerializer,
 class PublicationsViewSet(viewsets.ModelViewSet):
     queryset = Publication.objects.all().order_by('-created')
     serializer_class = PublicationSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    # filterset_class =
 
     def perform_create(self, serializer):
         data = {
@@ -22,6 +24,8 @@ class PublicationsViewSet(viewsets.ModelViewSet):
 
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    # filterset_class =
 
     def get_queryset(self):
         publication_id = self.kwargs.get('publication_id')
