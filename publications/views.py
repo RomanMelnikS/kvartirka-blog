@@ -13,7 +13,7 @@ class PublicationsViewSet(viewsets.ModelViewSet):
     queryset = Publication.objects.all().order_by('-created')
     serializer_class = PublicationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    # filterset_class =
+    filterset_fields = ['author', ]
 
     def perform_create(self, serializer):
         data = {
@@ -25,7 +25,6 @@ class PublicationsViewSet(viewsets.ModelViewSet):
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    # filterset_class =
 
     def get_queryset(self):
         publication_id = self.kwargs.get('publication_id')
@@ -60,7 +59,12 @@ class CommentsViewSet(viewsets.ModelViewSet):
             Comment,
             id=pk
         )
-        serializer = CommentSerializer(comment)
+        serializer = CommentSerializer(
+            comment,
+            context={
+                'request': request
+            }
+        )
         if request.method == 'POST':
             serializer = ReplaysCreateSerializer(
                 data={

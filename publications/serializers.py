@@ -20,12 +20,25 @@ class CommentSerializer(serializers.ModelSerializer):
             'replays'
         )
 
-    def get_replays(self, obj):
+    def get_replays(self, instance):
+        request = self.context['request']
+        level = request.query_params.get('level')
         queryset = Comment.objects.filter(
-            replays_id=obj.id
+            replays_id=instance.id
         )
+        if level:
+            filtered_queryset = queryset.filter(
+                level__lte=level
+            )
+            serializer = CommentSerializer(
+                filtered_queryset,
+                context=self.context,
+                many=True
+            )
+            return serializer.data
         serializer = CommentSerializer(
             queryset,
+            context=self.context,
             many=True
         )
         return serializer.data
@@ -43,7 +56,10 @@ class ReplaysCreateSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        serializer = CommentSerializer(instance)
+        serializer = CommentSerializer(
+            instance,
+            context=self.context,
+        )
         return serializer.data
 
 
@@ -70,6 +86,7 @@ class PublicationSerializer(serializers.ModelSerializer):
         )
         serializer = CommentSerializer(
             queryset,
+            context=self.context,
             many=True
         )
         return serializer.data
