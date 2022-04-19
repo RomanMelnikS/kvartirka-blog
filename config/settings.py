@@ -114,6 +114,8 @@ SWAGGER_SETTINGS = {
     ],
 }
 
+CSRF_TRUSTED_ORIGINS = ['http://localhost', 'http://127.0.0.1']
+
 LANGUAGE_CODE = 'ru-Ru'
 
 TIME_ZONE = 'Europe/Moscow'
