@@ -1,4 +1,5 @@
 from django.utils.decorators import method_decorator
+from django.db.models import Prefetch
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
@@ -55,7 +56,18 @@ from .serializers import (CommentSerializer, PublicationSerializer,
     )
 )
 class PublicationsViewSet(viewsets.ModelViewSet):
-    queryset = Publication.objects.all().order_by('-created')
+    queryset = Publication.objects.select_related(
+        'author'
+    ).prefetch_related(
+        Prefetch(
+          'comments',
+          queryset=Comment.objects.filter(
+              replays_id=None
+            ).select_related(
+                'author'
+            )
+        )
+    ).order_by('-created')
     serializer_class = PublicationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     filterset_fields = ['author', ]
@@ -120,11 +132,13 @@ class CommentsViewSet(
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        if getattr(self, "swagger_fake_view", False):
+        if getattr(self, 'swagger_fake_view', False):
             return Comment.objects.none()
         publication_id = self.kwargs.get('publication_id')
-        publication = get_object_or_404(Publication, id=publication_id)
-        queryset = publication.comments.filter(replays_id=None)
+        queryset = Comment.objects.filter(
+            publication_id=publication_id,
+            replays_id=None
+            ).select_related('author', 'publication', 'replays')
         return queryset
 
     def perform_create(self, serializer):

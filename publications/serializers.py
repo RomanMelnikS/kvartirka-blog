@@ -25,7 +25,7 @@ class CommentSerializer(serializers.ModelSerializer):
         level = request.query_params.get('level')
         queryset = Comment.objects.filter(
             replays_id=instance.id
-        )
+        ).select_related('author')
         if level:
             filtered_queryset = queryset.filter(
                 level__lte=level
@@ -68,7 +68,7 @@ class PublicationSerializer(serializers.ModelSerializer):
         source='author.username',
         read_only=True
     )
-    comments = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True)
 
     class Meta:
         model = Publication
@@ -78,15 +78,3 @@ class PublicationSerializer(serializers.ModelSerializer):
             'created',
             'comments'
         )
-
-    def get_comments(self, obj):
-        queryset = Comment.objects.filter(
-            publication_id=obj.id,
-            replays_id=None
-        )
-        serializer = CommentSerializer(
-            queryset,
-            context=self.context,
-            many=True
-        )
-        return serializer.data
